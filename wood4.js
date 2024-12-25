@@ -6,60 +6,83 @@ var nextTarget = null
 var nextStart = null
 var protHarv = []
 
+function check_is_harv(prot_position)
+{
+    for (let i = 0; i < protHarv.length; i++)
+    {
+        if ((protHarv[i].x == prot_position.x)
+        && (protHarv[i].y == prot_position.y))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 function harv(game, x, y)
 {
-    console.error(x, y, "", game.myProt.C > 0 && game.myProt.D > 0)
     if (game.grid[y][x + 1].protein != null && game.myProt.C > 0 && game.myProt.D > 0)
     {
         protHarv.push({"y":y,"x":x + 1})
-        console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0]} ${nextStart[1] + 1} HARVESTER E`)
+        console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x + 1} ${nextStart.y} HARVESTER E`)
         game.myProt.C -= 1
         game.myProt.D -= 1
+        if (nextTarget.x == x + 1 && nextTarget.y == y)
+            nextTarget = null;
         return true
     }
     if (game.grid[y][x - 1].protein != null && game.myProt.C > 0 && game.myProt.D > 0)
     {
         protHarv.push({"y":y,"x":x - 1})
-        console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0]} ${nextStart[1] - 1} HARVESTER W`)
+        console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x - 1} ${nextStart.y} HARVESTER W`)
         game.myProt.C -= 1
         game.myProt.D -= 1
+        if (nextTarget.x == x - 1 && nextTarget.y == y)
+            nextTarget = null;
         return true
     }
     if (game.grid[y + 1][x].protein != null && game.myProt.C > 0 && game.myProt.D > 0)
     {
         protHarv.push({"y":y + 1,"x":x})
-        console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0] + 1} ${nextStart[1]} HARVESTER S`)
+        console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x} ${nextStart.y + 1} HARVESTER S`)
         game.myProt.C -= 1
         game.myProt.D -= 1
+        if (nextTarget.x == x && nextTarget.y == y + 1)
+            nextTarget = null;
         return true
     }
     if (game.grid[y - 1][x].protein != null && game.myProt.C > 0 && game.myProt.D > 0)
     {
         protHarv.push({"y":y - 1,"x":x})
-        console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0] - 1} ${nextStart[1]} HARVESTER N`)
+        console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x} ${nextStart.y - 1} HARVESTER N`)
         game.myProt.C -= 1
         game.myProt.D -= 1
+        if (nextTarget.x == x && nextTarget.y == y - 1)
+            nextTarget = null;
         return true
     }
     return false
 }
 
-function look_4_target(prot, orga, orgaId)
+function look_4_target(prot, orga, game)
 {
     var minDist = 6000
     for (let i = 0; i < prot.length; i++)
     {
         let dist = 0;
-        for (let j = 0; j < orga.length; j++)
+        if (!check_is_harv(prot[i]))
         {
-            dist = 0
-            dist += Math.abs(orga[j][0] - prot[i][0])
-            dist += Math.abs(orga[j][1] - prot[i][1])
-            if (dist < minDist)
+            for (let j = 0; j < orga.length; j++)
             {
-                minDist = dist;
-                nextTarget = prot[i];
-                nextStart = orga[j];
+                dist = 0
+                dist += Math.abs(orga[j].x - prot[i].x)
+                dist += Math.abs(orga[j].y - prot[i].y)
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    nextTarget = prot[i];
+                    nextStart = orga[j];
+                }
             }
         }
     }
@@ -67,46 +90,46 @@ function look_4_target(prot, orga, orgaId)
 
 function build_path(game)
 {
-    if ((nextStart[0] == nextTarget[0]) && (nextStart[1] == nextTarget[1]))
+    if ((nextStart.x == nextTarget.x) && (nextStart.y == nextTarget.y))
         return false;
-    if (nextStart[0] == nextTarget[0])
+    if (nextStart.x == nextTarget.x)
     {
-        if (nextTarget[1] > nextStart[1])
+        if (nextTarget.y > nextStart.y)
         {
-            if (!harv(game, nextStart[0], nextStart[1] + 1) && game.myProt.A > 0)
+            if (!harv(game, nextStart.x, nextStart.y + 1) && game.myProt.A > 0)
             {
-                console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0]} ${nextStart[1] + 1} BASIC`)
-                nextStart[1] += 1
+                console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x} ${nextStart.y + 1} BASIC`)
+                nextStart.y += 1
                 return true
             }
         }
         else
         {
-            if (!harv(game, nextStart[0], nextStart[1] - 1) && game.myProt.A > 0)
+            if (!harv(game, nextStart.x, nextStart.y - 1) && game.myProt.A > 0)
             {
-                console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0]} ${nextStart[1] - 1} BASIC`)
-                nextStart[1] -= 1
+                console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x} ${nextStart.y - 1} BASIC`)
+                nextStart.y -= 1
                 return true
             }
         }
     }
     else
     {
-        if (nextTarget[0] > nextStart[0])
+        if (nextTarget.x > nextStart.x)
         {
-            if (!harv(game, nextStart[0] + 1, nextStart[1]) && game.myProt.A > 0)
+            if (!harv(game, nextStart.x + 1, nextStart.y) && game.myProt.A > 0)
             {
-                console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0] + 1} ${nextStart[1]} BASIC`)
-                nextStart[0] += 1
+                console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x + 1} ${nextStart.y} BASIC`)
+                nextStart.x += 1
                 return true
             }
         }
         else
         {
-            if (!harv(game, nextStart[0] - 1, nextStart[1]) && game.myProt.A > 0)
+            if (!harv(game, nextStart.x - 1, nextStart.y) && game.myProt.A > 0)
             {
-                console.log(`GROW ${game.grid[nextStart[1]][nextStart[0]].organId} ${nextStart[0] - 1} ${nextStart[1]} BASIC`)
-                nextStart[0] -= 1
+                console.log(`GROW ${game.grid[nextStart.y][nextStart.x].organId} ${nextStart.x - 1} ${nextStart.y} BASIC`)
+                nextStart.x -= 1
                 return true
             }
         }
@@ -155,22 +178,18 @@ while (true) {
         if (type == "A" || type == "B" || type == "C" || type == "D")
         {
             game.grid[y][x].protein = type
+            prot.push({"x": x, "y": y})
         }
         if (type == "ROOT" || type == "BASIC" || type == "TENTACLE" || type == "HARVESTER" || type == "SPORER")
         {
             game.grid[y][x].organId = organId
             game.grid[y][x].organType = type
         }
-        if (type == "A")
-            prot.push([x, y])
         if (owner == 1)
-        {
-            orga.push([x, y])
-        }
+            orga.push({"x": x, "y": y})
         game.grid[y][x].owner = owner
     }
-    console.error("prot")
-    look_4_target(prot, orga)
+    look_4_target(prot, orga, game)
     var inputs = readline().split(' ');
     game.myProt.A = parseInt(inputs[0]);
     game.myProt.B = parseInt(inputs[1]);
@@ -186,7 +205,11 @@ while (true) {
     for (let i = 0; i < requiredActionsCount; i++)
     {
         if (game.myProt.A > 0 || game.myProt.B > 0 || game.myProt.C > 0 || game.myProt.D > 0)
+        {
+            console.error("a", nextTarget)
             build_path(game)
+            console.error("b", nextTarget)
+        }
         else
             console.log("WAIT")
     }
